@@ -40,24 +40,34 @@ public class Main {
         assertThat(extendingItem.getSomeOtherInt(), is(1));
 
 
-        ExtendingItem copyExtended = new ExtendingItem_MagicBuilder()
+        ExtendingItem copy = new ExtendingItem_MagicBuilder()
                 .fromPrototype(extendingItem)
                 .build();
 
-        assertThat(copyExtended, is(equalTo(extendingItem)));
+        assertThat(copy, is(equalTo(extendingItem)));
 
-        ExtendingItem_MagicBuilder copyFromSimpleBuilder = (ExtendingItem_MagicBuilder) new ExtendingItem_MagicBuilder()
-                .fromPrototype(simpleItem);
+        ExtendingItem modifiedCopy = new ExtendingItem_MagicBuilder()
+                .fromPrototype(extendingItem)
+                .extended("ext")
+                .build();
+
+        assertThat(modifiedCopy.getExtended(), is("ext"));
+        assertThat(modifiedCopy.getSomeValue(), is("extending"));
+        assertThat(modifiedCopy.getSomeOtherInt(), is(1));
 
 
-        ExtendingItem copyFromSimple =
-                copyFromSimpleBuilder
-                        .extended("ext")
-                        .build();
+        ExtendingAbstractItem_MagicBuilder extendingAbstractItemBuilder = (ExtendingAbstractItem_MagicBuilder) new ExtendingAbstractItem_MagicBuilder()
+                .c("cc")
+                .d("dd")
+                .a("aa")
+                .b("bb");
+        ExtendingAbstractItem extendingAbstractItem = extendingAbstractItemBuilder.build();
 
-        assertThat(copyFromSimple.getExtended(), is("ext"));
-        assertThat(copyFromSimple.getSomeValue(), is("simple"));
-        assertThat(copyFromSimple.getSomeOtherInt(), is(0));
+        assertThat(extendingAbstractItem.getA(), is("aa"));
+        assertThat(extendingAbstractItem.getB(), is("bb"));
+        assertThat(extendingAbstractItem.getC(), is("cc"));
+        assertThat(extendingAbstractItem.getD(), is("dd"));
+        
     }
 
 }

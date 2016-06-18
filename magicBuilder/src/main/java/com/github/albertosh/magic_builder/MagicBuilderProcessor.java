@@ -8,6 +8,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
+import com.squareup.javapoet.WildcardTypeName;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Flags;
@@ -23,6 +24,7 @@ import com.sun.tools.javac.util.Name;
 import com.sun.tools.javac.util.Names;
 
 import java.io.IOException;
+import java.lang.reflect.ParameterizedType;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -149,6 +151,7 @@ public class MagicBuilderProcessor extends AbstractProcessor {
         String builderName = currentClass.getSimpleName() + BUILDER_CLASS_SUFIX;
         String packageName = currentClass.getEnclosingElement().toString() + BUILDER_PACKAGE_SUFIX;
         ClassName builderClass = ClassName.bestGuess(packageName + "." + builderName);
+
         TypeName currentType = TypeName.get(currentClass.asType());
 
         TypeSpec.Builder builder = TypeSpec.classBuilder(builderName)
@@ -158,32 +161,34 @@ public class MagicBuilderProcessor extends AbstractProcessor {
         if (classIsAbstract(currentClass))
             builder.addModifiers(Modifier.ABSTRACT);
 
-        addSuperClass(builder, currentClass, currentType);
+        TypeVariableName typeVariableName = TypeVariableName.get("T", TypeName.get(currentClass.asType()));
+        builder.addTypeVariable(typeVariableName);
+        TypeName currentBuilderType = ParameterizedTypeName.get(builderClass, typeVariableName);
+
+        addSuperClass(builder, currentClass, typeVariableName);
 
         MethodSpec.Builder fromPrototypeBuilder = MethodSpec.methodBuilder("fromPrototype")
                 .addAnnotation(OverridingMethodsMustInvokeSuper.class)
                 .addModifiers(Modifier.PUBLIC)
-                .returns(builderClass);
+                .returns(currentBuilderType);
 
-        if (classIsAbstract(currentClass)) {
-            TypeVariableName typeVariableName = TypeVariableName.get("T", currentType);
-            fromPrototypeBuilder.addParameter(typeVariableName, "prototype");
-        } else {
-            fromPrototypeBuilder.addParameter(currentType, "prototype");
-        }
+
+        fromPrototypeBuilder.addParameter(typeVariableName, "prototype");
+
 
         if (classExtendsFromSomething(currentClass)) {
             fromPrototypeBuilder
+                    .addAnnotation(Override.class)
                     .addStatement("super.fromPrototype(prototype)");
         }
 
-        addFields(currentClass, builder, fromPrototypeBuilder, builderClass);
+        addFields(currentClass, builder, fromPrototypeBuilder, currentBuilderType);
 
         fromPrototypeBuilder.addStatement("return this");
         builder.addMethod(fromPrototypeBuilder.build());
 
         if (classIsNotAbstract(currentClass))
-            addBuildMethod(currentClass, builder);
+            addBuildMethod(currentClass, builder, typeVariableName);
 
         TypeSpec builded = builder.build();
         JavaFile javaFile = JavaFile.builder(packageName, builded)
@@ -198,19 +203,19 @@ public class MagicBuilderProcessor extends AbstractProcessor {
         return builderClass;
     }
 
-    private void addSuperClass(TypeSpec.Builder builder, TypeElement currentClass, TypeName currentType) {
+    private void addSuperClass(TypeSpec.Builder builder, TypeElement currentClass, TypeName typeVariableName) {
         if (classExtendsFromSomething(currentClass)) {
-            TypeName elemType = TypeName.get(currentClass.asType());
             TypeName superClassType = getSuperType(currentClass);
             ClassName superBuilderClassName = alreadyGeneratedClasses2Builder.get(superClassType);
-            TypeName superType = ParameterizedTypeName.get(superBuilderClassName, elemType);
-            //builder.superclass(superType);
-            builder.superclass(superBuilderClassName);
-        } else {
-            ClassName builderImplClassName = ClassName.get(IMagicBuilder.class);
-            ParameterizedTypeName parameterizedBuilder = ParameterizedTypeName.get(builderImplClassName, currentType);
-            builder.addSuperinterface(parameterizedBuilder);
+
+            TypeName superType = ParameterizedTypeName.get(superBuilderClassName, typeVariableName);
+            builder.superclass(superType);
         }
+
+            ClassName builderImplClassName = ClassName.get(IMagicBuilder.class);
+            ParameterizedTypeName parameterizedBuilder = ParameterizedTypeName.get(builderImplClassName, typeVariableName);
+            builder.addSuperinterface(parameterizedBuilder);
+
     }
 
 
@@ -223,16 +228,16 @@ public class MagicBuilderProcessor extends AbstractProcessor {
     }
 
 
-    private void addFields(Element currentClass, TypeSpec.Builder builder, MethodSpec.Builder fromPrototypeBuilder, ClassName builderClass) {
+    private void addFields(Element currentClass, TypeSpec.Builder builder, MethodSpec.Builder fromPrototypeBuilder, TypeName currentBuilderType) {
         List<? extends Element> enclosed = currentClass.getEnclosedElements();
         for (Element field : enclosed) {
             if (field.getKind().isField()) {
-                writeSingleAttributeSet(field, builder, fromPrototypeBuilder, builderClass);
+                writeSingleAttributeSet(field, builder, fromPrototypeBuilder, currentBuilderType);
             }
         }
     }
 
-    private void writeSingleAttributeSet(Element field, TypeSpec.Builder builder, MethodSpec.Builder fromPrototypeBuilder, ClassName builderClass) {
+    private void writeSingleAttributeSet(Element field, TypeSpec.Builder builder, MethodSpec.Builder fromPrototypeBuilder, TypeName currentBuilderType) {
         String name = field.getSimpleName().toString();
         TypeName type = TypeName.get(field.asType());
         builder.addField(FieldSpec.builder(
@@ -250,7 +255,7 @@ public class MagicBuilderProcessor extends AbstractProcessor {
         builder.addMethod(MethodSpec
                 .methodBuilder(name)
                 .addModifiers(Modifier.PUBLIC)
-                .returns(builderClass)
+                .returns(currentBuilderType)
                 .addParameter(type, name)
                 .addStatement("this.$L = $L", name, name)
                 .addStatement("return this")
@@ -283,13 +288,13 @@ public class MagicBuilderProcessor extends AbstractProcessor {
     }
 
 
-    private void addBuildMethod(Element currentClass, TypeSpec.Builder builder) {
+    private void addBuildMethod(Element currentClass, TypeSpec.Builder builder, TypeVariableName returningType) {
         TypeName elemType = TypeName.get(currentClass.asType());
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("build")
                 .addAnnotation(Override.class)
-                .returns(elemType)
+                .returns(returningType)
                 .addModifiers(Modifier.PUBLIC)
-                .addStatement("return new $T(this)", elemType);
+                .addStatement("return (T) new $T(this)", elemType);
         builder.addMethod(methodBuilder.build());
     }
 
