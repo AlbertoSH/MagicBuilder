@@ -18,10 +18,12 @@ mainClassName = "com.github.albertosh.magic_builder.sample.Main"
 
 repositories {
     mavenCentral()
+    jcenter()
 }
 
 dependencies {
-    apt project(':magic_builder')
-    compile project(':magic_builder')
+    compile project(':magic-builder')
+    apt project(':magic-builder-compiler')
+    compileOnly project(':magic-builder-compiler')
     compile 'junit:junit:4.12'
 }

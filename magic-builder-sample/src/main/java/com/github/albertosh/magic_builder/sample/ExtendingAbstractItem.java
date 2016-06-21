@@ -1,5 +1,8 @@
 package com.github.albertosh.magic_builder.sample;
 
+import com.github.albertosh.magic_builder.MagicBuilder;
+
+@MagicBuilder
 public class ExtendingAbstractItem extends AbstractItem {
 
     private String c;

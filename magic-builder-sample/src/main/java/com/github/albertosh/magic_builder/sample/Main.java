@@ -64,6 +64,7 @@ public class Main {
         assertThat(extendingAbstractItem.getC(), is("cc"));
         assertThat(extendingAbstractItem.getD(), is("dd"));
 
+        System.out.println("Everything went OK ;)");
     }
 
 }

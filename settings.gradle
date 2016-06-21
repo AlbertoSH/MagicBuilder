@@ -1,6 +1,5 @@
 rootProject.name = 'magic_builder_project'
-include 'magicBuilder'
-findProject(':magicBuilder')?.name = 'magic_builder'
-include 'sample'
-findProject(':sample')?.name = 'magic_builder_sample'
+include 'magic-builder-compiler'
+include 'magic-builder-sample'
+include 'magic-builder'
 
