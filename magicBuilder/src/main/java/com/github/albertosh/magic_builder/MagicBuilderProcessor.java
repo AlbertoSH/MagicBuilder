@@ -1,5 +1,6 @@
 package com.github.albertosh.magic_builder;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -173,12 +174,11 @@ public class MagicBuilderProcessor extends AbstractProcessor {
                 .returns(currentBuilderType);
 
 
-        fromPrototypeBuilder.addParameter(typeVariableName, "prototype");
+        fromPrototypeBuilder.addParameter(currentType, "prototype");
 
 
         if (classExtendsFromSomething(currentClass)) {
             fromPrototypeBuilder
-                    .addAnnotation(Override.class)
                     .addStatement("super.fromPrototype(prototype)");
         }
 
@@ -212,9 +212,9 @@ public class MagicBuilderProcessor extends AbstractProcessor {
             builder.superclass(superType);
         }
 
-            ClassName builderImplClassName = ClassName.get(IMagicBuilder.class);
-            ParameterizedTypeName parameterizedBuilder = ParameterizedTypeName.get(builderImplClassName, typeVariableName);
-            builder.addSuperinterface(parameterizedBuilder);
+        ClassName builderImplClassName = ClassName.get(IMagicBuilder.class);
+        ParameterizedTypeName parameterizedBuilder = ParameterizedTypeName.get(builderImplClassName, typeVariableName);
+        builder.addSuperinterface(parameterizedBuilder);
 
     }
 
@@ -292,6 +292,10 @@ public class MagicBuilderProcessor extends AbstractProcessor {
         TypeName elemType = TypeName.get(currentClass.asType());
         MethodSpec.Builder methodBuilder = MethodSpec.methodBuilder("build")
                 .addAnnotation(Override.class)
+                .addAnnotation(
+                        AnnotationSpec.builder(SuppressWarnings.class)
+                                .addMember("value", "\"unchecked\"")
+                                .build())
                 .returns(returningType)
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("return (T) new $T(this)", elemType);

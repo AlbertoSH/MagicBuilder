@@ -22,19 +22,6 @@ public class Main {
                 .someOtherInt(1);
         ExtendingItem extendingItem = extendingItemBuilder.build();
 
-        /*
-        Casting built objects WILL cause problems because the constructor of the father item will be called
-
-        ExtendingItem extendingItem = (ExtendingItem) new ExtendingItem_MagicBuilder()
-                .extended("another value")
-                .someValue("extending")
-                .someOtherInt(1)
-                .build();
-
-        That code will invoke SimpleItem's constructor so 'extended' value will be lost
-        BE CAREFUL WITH THAT!!!
-        */
-
         assertThat(extendingItem.getExtended(), is("another value"));
         assertThat(extendingItem.getSomeValue(), is("extending"));
         assertThat(extendingItem.getSomeOtherInt(), is(1));
@@ -55,6 +42,15 @@ public class Main {
         assertThat(modifiedCopy.getSomeValue(), is("extending"));
         assertThat(modifiedCopy.getSomeOtherInt(), is(1));
 
+        ExtendingItem_MagicBuilder extendingItemFromSimpleBuilder = new ExtendingItem_MagicBuilder();
+        extendingItemFromSimpleBuilder.fromPrototype(simpleItem);
+        ExtendingItem extendingItemFromSimple = extendingItemFromSimpleBuilder
+                .extended("copy from simple")
+                .build();
+
+        assertThat(extendingItemFromSimple.getExtended(), is("copy from simple"));
+        assertThat(extendingItemFromSimple.getSomeValue(), is("simple"));
+        assertThat(extendingItemFromSimple.getSomeOtherInt(), is(0));
 
         ExtendingAbstractItem_MagicBuilder extendingAbstractItemBuilder = (ExtendingAbstractItem_MagicBuilder) new ExtendingAbstractItem_MagicBuilder()
                 .c("cc")
@@ -67,7 +63,7 @@ public class Main {
         assertThat(extendingAbstractItem.getB(), is("bb"));
         assertThat(extendingAbstractItem.getC(), is("cc"));
         assertThat(extendingAbstractItem.getD(), is("dd"));
-        
+
     }
 
 }
