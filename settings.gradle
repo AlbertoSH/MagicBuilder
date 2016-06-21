@@ -1,0 +1,5 @@
+rootProject.name = 'magic_builder_project'
+include 'magic-builder-compiler'
+include 'magic-builder-sample'
+include 'magic-builder'
+

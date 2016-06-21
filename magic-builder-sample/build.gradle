@@ -1,0 +1,29 @@
+buildscript {
+    repositories {
+        maven {
+            url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "net.ltgt.gradle:gradle-apt-plugin:0.6"
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: "net.ltgt.apt"
+apply plugin: 'application'
+
+mainClassName = "com.github.albertosh.magic_builder.sample.Main"
+
+repositories {
+    mavenCentral()
+    jcenter()
+}
+
+dependencies {
+    compile project(':magic-builder')
+    apt project(':magic-builder-compiler')
+    compileOnly project(':magic-builder-compiler')
+    compile 'junit:junit:4.12'
+}
