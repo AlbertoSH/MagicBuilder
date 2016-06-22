@@ -38,7 +38,7 @@ publishing {
             from components.java
             groupId 'com.github.albertosh'
             artifactId 'magic-builder-compiler'
-            version '1.0.0'
+            version '1.0.1'
 
             artifact sourceJar {
                 classifier "sources"
@@ -62,9 +62,9 @@ bintray {
         githubRepo = 'AlbertoSH/MagicBuilder'
         githubReleaseNotesFile = 'README.md'
         version {
-            name = '1.0.0'
-            desc = 'MagicBuilderCompiler 1.0.0'
-            vcsTag = '1.0.0 '
+            name = '1.0.1'
+            desc = 'MagicBuilderCompiler 1.0.1'
+            vcsTag = '1.0.1'
         }
     }
 }

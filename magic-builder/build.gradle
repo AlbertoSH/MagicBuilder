@@ -63,7 +63,7 @@ bintray {
         version {
             name = '1.0.0'
             desc = 'MagicBuilder 1.0.0'
-            vcsTag = '1.0.0 '
+            vcsTag = '1.0.0'
         }
     }
 }
