@@ -33,6 +33,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Consumer;
 
+import javax.annotation.Generated;
 import javax.annotation.OverridingMethodsMustInvokeSuper;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -156,6 +157,10 @@ public class MagicBuilderProcessor extends AbstractProcessor {
 
         TypeSpec.Builder builder = TypeSpec.classBuilder(builderName)
                 .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(
+                        AnnotationSpec.builder(Generated.class)
+                                .addMember("value", "\"MagicBuilder\"")
+                                .build())
                 .addMethod(MethodSpec.constructorBuilder().addModifiers(Modifier.PUBLIC).build());
 
         if (classIsAbstract(currentClass))

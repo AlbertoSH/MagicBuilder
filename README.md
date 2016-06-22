@@ -57,7 +57,7 @@ Currently the lib is only at jcenter. In the following days I will upload it to 
 MagicBuilder is based in static code analysis with annotation support. These are the steps to use it:
 
 1. Annotate your models with `@MagicBuilder`
-2. And... you're done XD
+2. And... you're done
 
 **MagicBuilder** generates everything you need. Let's take a look to what has done to a very simple class:
 
@@ -80,6 +80,7 @@ public class SimpleItem {
 Given that class the builder generated is the following:
 
 ```java
+@Generated("MagicBuilder")
 public class SimpleItem_MagicBuilder<T extends SimpleItem> implements IMagicBuilder<T> {
   private String someValue;
 
